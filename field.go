@@ -43,8 +43,21 @@ const (
 	objectType
 	stringerType
 	errorType
+	callerType
 	skipType
 )
+
+func anyCallerField(fields []Field) (have bool, skip int) {
+	for i := range fields {
+		if fields[i].fieldType == callerType {
+			have = true
+			if n := int(fields[i].ival); n > skip {
+				skip = n
+			}
+		}
+	}
+	return
+}
 
 // A Field is a marshaling operation used to add a key-value pair to a logger's
 // context. Most fields are lazily marshaled, so it's inexpensive to add fields to
@@ -139,6 +152,19 @@ func Error(err error) Field {
 	return Field{key: "error", fieldType: errorType, obj: err}
 }
 
+// Caller constructs a Field that causes the log entry to be annotated with the
+// filename and line number of zap's caller.
+func Caller() Field {
+	return CallerSkip(0)
+}
+
+// CallerSkip construts a Field that causes the log entry be annotated with the
+// filename and line number of a calelr outside of zap controlled by the skip
+// argument.
+func CallerSkip(skip int) Field {
+	return Field{key: "caller", fieldType: callerType, ival: int64(_defaultCallerSkip + skip)}
+}
+
 // Stack constructs a Field that stores a stacktrace of the current goroutine
 // under the key "stacktrace". Keep in mind that taking a stacktrace is eager
 // and extremely expensive (relatively speaking); this function both makes an
@@ -218,7 +244,7 @@ func (f Field) AddTo(kv KeyValue) {
 		err = kv.AddObject(f.key, f.obj)
 	case errorType:
 		kv.AddString(f.key, f.obj.(error).Error())
-	case skipType:
+	case callerType, skipType:
 		break
 	default:
 		panic(fmt.Sprintf("unknown field type found: %v", f))

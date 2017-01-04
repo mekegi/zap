@@ -22,6 +22,7 @@ package zap
 
 import (
 	"fmt"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -129,6 +130,10 @@ func (ce *CheckedEntry) Write(fields ...Field) {
 		return
 	}
 	ce.safeToWrite = false
+
+	if have, skip := anyCallerField(fields); have && !ce.Entry.Caller.Defined {
+		ce.Entry.Caller = MakeEntryCaller(runtime.Caller(skip))
+	}
 
 	var errs multiError
 	for i := range ce.facs {

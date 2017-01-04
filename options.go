@@ -60,7 +60,7 @@ func Development() Option {
 	})
 }
 
-// AddCaller configures the Logger to annotate each message with the filename
+// AddCaller configures the Logger to annotate each entry with the filename
 // and line number of zap's caller.
 func AddCaller() Option {
 	return AddCallerSkip(0)
