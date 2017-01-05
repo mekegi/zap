@@ -101,7 +101,7 @@ func (m Meta) InternalError(cause string, err error) {
 func (m Meta) Encode(w io.Writer, t time.Time, lvl Level, msg string, fields []Field) error {
 	enc := m.Encoder.Clone()
 	addFields(enc, fields)
-	if len(m.Hooks) >= 0 {
+	if len(m.Hooks) > 0 {
 		entry := _entryPool.Get().(*Entry)
 		entry.Level = lvl
 		entry.Message = msg
